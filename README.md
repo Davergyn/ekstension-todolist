@@ -23,18 +23,6 @@ Startup Greeting: Jendela popup otomatis saat browser dibuka dengan salam yang d
 -Storage API: Penyimpanan data tugas secara persisten.
 -Action & Windows API: Mengontrol tampilan popup dan jendela aplikasi.
 
-📂 Struktur Proyek
-Plaintext
-├── manifest.json         # Konfigurasi utama ekstensi
-├── background.js        # Service worker untuk menangani startup browser
-├── index.html           # Antarmuka utama aplikasi To Do List
-├── style.css            # Styling utama aplikasi (Dark Mode)
-├── script.js            # Logika utama aplikasi To Do List
-├── greeting.html        # Halaman popup penyambutan otomatis
-├── greeting.css         # Styling khusus halaman greeting
-├── greeting.js          # Logika jam dan greeting dinamis
-└── to-do-list.png       # Ikon aplikasi
-
 🚀 Cara Instalasi
 -Download/Clone semua file proyek ini ke dalam satu folder di komputer Anda.
 -Buka browser Google Chrome.
