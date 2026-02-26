@@ -1,5 +1,4 @@
-**Ekstension To Do List Chrome,
-**
+Ekstension To Do List Chrome
 
 📝 To Do List Extension (Chrome Manifest V3)
 Aplikasi To Do List berbasis ekstensi Google Chrome yang dirancang untuk membantu produktivitas harian. Ekstensi ini memiliki fitur unik berupa Startup Greeting Popup yang akan muncul secara otomatis memberikan salam dan pengingat waktu setiap kali browser Chrome pertama kali dijalankan.
