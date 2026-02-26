@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "To Do List Ekstensi",
+  "version": "1.0",
+  "description": "Aplikasi To Do List dengan popup otomatis saat browser dibuka",
+  "icons": {
+    "16": "to-do-list.png",
+    "48": "to-do-list.png",
+    "128": "to-do-list.png"
+  },
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "To Do List",
+    "default_icon": {
+      "16": "to-do-list.png",
+      "48": "to-do-list.png",
+      "128": "to-do-list.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "windows"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "style.css",
+        "script.js",
+        "to-do-list.png",
+        "greeting.html",
+        "greeting.css",
+        "greeting.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

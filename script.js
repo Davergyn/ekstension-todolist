@@ -1,0 +1,484 @@
+/* =============================================
+   DOM ELEMENTS
+   ============================================= */
+const datePicker = document.getElementById("datePicker");
+const selectedDate = document.getElementById("selectedDate");
+const selectedDay = document.getElementById("selectedDay");
+const taskList = document.getElementById("taskList");
+const calendarIcon = document.querySelector(".calendar-icon");
+const modalOverlay = document.getElementById("modalOverlay");
+const modalTitle = document.getElementById("modalTitle");
+const taskTitle = document.getElementById("taskTitle");
+const taskDesc = document.getElementById("taskDesc");
+const emptyState = document.getElementById("emptyState");
+
+// null = mode tambah; object = mode edit
+let editContext = null;
+
+// Tanggal aktif untuk penambahan task baru (format: "YYYY-MM-DD")
+let activeDate = null;
+
+/* =============================================
+   STORAGE HELPERS (chrome.storage.local)
+   ============================================= */
+function getAllTasks(callback) {
+  chrome.storage.local.get("tasksByDate", (result) => {
+    callback(result.tasksByDate || {});
+  });
+}
+
+function saveAllTasks(allTasks, callback) {
+  chrome.storage.local.set({ tasksByDate: allTasks }, callback);
+}
+
+function getTasksForDate(dateKey, callback) {
+  getAllTasks((all) => {
+    callback(all[dateKey] || []);
+  });
+}
+
+function saveTasksForDate(dateKey, tasks, callback) {
+  getAllTasks((all) => {
+    all[dateKey] = tasks;
+    saveAllTasks(all, callback);
+  });
+}
+
+/* =============================================
+   DATE LABEL HELPERS
+   ============================================= */
+function getDateLabel(dateKey) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateKey);
+  target.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((today - target) / 86400000);
+
+  if (diffDays === 0) return "Hari ini";
+  if (diffDays === 1) return "Kemarin";
+  if (diffDays === 2) return "2 hari lalu";
+  if (diffDays === -1) return "Besok";
+  if (diffDays === -2) return "Lusa";
+
+  return target.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+/* =============================================
+   CALENDAR / DATE SELECTION
+   ============================================= */
+datePicker.addEventListener("click", openCalendar);
+
+if (calendarIcon) {
+  calendarIcon.addEventListener("click", (e) => {
+    e.stopPropagation();
+    openCalendar();
+  });
+}
+
+function openCalendar() {
+  if (typeof datePicker.showPicker === "function") {
+    datePicker.showPicker();
+  } else {
+    datePicker.focus();
+  }
+}
+
+datePicker.addEventListener("change", () => {
+  if (!datePicker.value) return;
+  setActiveDate(datePicker.value);
+});
+
+function setActiveDate(dateValue) {
+  activeDate = dateValue;
+
+  const date = new Date(dateValue);
+  const formattedDate = date.toLocaleDateString("id-ID", {
+    day: "2-digit", month: "long", year: "numeric",
+  });
+  const dayName = date.toLocaleDateString("id-ID", { weekday: "long" });
+
+  selectedDate.textContent = formattedDate;
+  if (selectedDay) selectedDay.textContent = dayName;
+  datePicker.value = dateValue;
+
+  chrome.storage.local.set({ selectedDateValue: dateValue });
+
+  renderAllTasks();
+}
+
+/* =============================================
+   RENDER — SEMUA TASK, DIURUTKAN TERLAMA DULU
+   ============================================= */
+function renderAllTasks() {
+  getAllTasks((all) => {
+    taskList.innerHTML = "";
+
+    const dateKeys = Object.keys(all).sort((a, b) => (a < b ? -1 : 1));
+    const nonEmpty = dateKeys.filter((k) => all[k] && all[k].length > 0);
+
+    if (nonEmpty.length === 0) {
+      updateEmptyState(true);
+      return;
+    }
+
+    updateEmptyState(false);
+
+    nonEmpty.forEach((dateKey) => {
+      const tasks = all[dateKey];
+
+      const sorted = [...tasks].sort((a, b) => {
+        const aPriority = a.pinned ? 0 : a.completed ? 2 : 1;
+        const bPriority = b.pinned ? 0 : b.completed ? 2 : 1;
+        return aPriority - bPriority;
+      });
+
+      const header = document.createElement("li");
+      header.className = "date-label";
+      header.textContent = getDateLabel(dateKey);
+      taskList.appendChild(header);
+
+      sorted.forEach((task) => {
+        createTaskElement(
+          task.text,
+          task.desc || "",
+          task.completed,
+          task.pinned,
+          task.expanded || false,
+          dateKey
+        );
+      });
+    });
+  });
+}
+
+function updateEmptyState(show) {
+  if (!emptyState) return;
+  emptyState.style.display = show ? "flex" : "none";
+  const textEl = emptyState.querySelector(".empty-state-text");
+  if (textEl) {
+    textEl.textContent = "Belum ada task tersimpan";
+  }
+}
+
+/* =============================================
+   LOAD ON STARTUP
+   ============================================= */
+document.addEventListener("DOMContentLoaded", () => {
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayDate = new Date();
+  selectedDate.textContent = todayDate.toLocaleDateString("id-ID", {
+    day: "2-digit", month: "long", year: "numeric",
+  });
+  if (selectedDay) {
+    selectedDay.textContent = todayDate.toLocaleDateString("id-ID", { weekday: "long" });
+  }
+
+  datePicker.min = todayStr;
+  datePicker.value = todayStr;
+
+  chrome.storage.local.get("selectedDateValue", (result) => {
+    const savedValue = result.selectedDateValue;
+    activeDate = savedValue || todayStr;
+    if (!savedValue) chrome.storage.local.set({ selectedDateValue: todayStr });
+    renderAllTasks();
+  });
+
+  // ── Reminder Popup ──
+  const reminderPopup = document.getElementById("reminderPopup");
+  const reminderClose = document.getElementById("reminderClose");
+
+  function closeReminderPopup() {
+    reminderPopup.classList.add("hide");
+    setTimeout(() => { reminderPopup.style.display = "none"; }, 300);
+  }
+
+  if (reminderClose) {
+    reminderClose.addEventListener("click", closeReminderPopup);
+  }
+
+  // Auto-close setelah 5 detik
+  setTimeout(closeReminderPopup, 5000);
+
+  // FAB → buka modal tambah task
+  document.getElementById("fabBtn").addEventListener("click", () => openModal());
+
+  // Klik overlay (luar modal) → tutup modal
+  document.getElementById("modalOverlay").addEventListener("click", (e) => {
+    if (e.target === document.getElementById("modalOverlay")) closeModalDirect();
+  });
+
+  // Tombol Batal
+  document.getElementById("cancelBtn").addEventListener("click", () => closeModalDirect());
+
+  // Tombol Simpan
+  document.getElementById("saveBtn").addEventListener("click", () => addTask());
+
+  // Enter di judul → simpan
+  document.getElementById("taskTitle").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      addTask();
+    }
+  });
+});
+
+/* =============================================
+   MODAL OPEN / CLOSE
+   ============================================= */
+function openModal(ctx = null) {
+  editContext = ctx;
+
+  if (ctx) {
+    modalTitle.textContent = "Edit Task";
+    taskTitle.value = ctx.textEl.textContent;
+    taskDesc.value = ctx.descPanelEl ? ctx.descPanelEl.textContent : "";
+  } else {
+    modalTitle.textContent = "Tambah Task Baru";
+    taskTitle.value = "";
+    taskDesc.value = "";
+  }
+
+  modalOverlay.classList.add("active");
+  taskTitle.focus();
+  taskTitle.select();
+}
+
+function closeModal(event) {
+  if (event.target === modalOverlay) closeModalDirect();
+}
+
+function closeModalDirect() {
+  modalOverlay.classList.remove("active");
+  editContext = null;
+  taskTitle.value = "";
+  taskDesc.value = "";
+}
+
+// Tutup semua dropdown saat klik di luar
+document.addEventListener("click", () => {
+  document
+    .querySelectorAll(".task-dropdown.open")
+    .forEach((d) => d.classList.remove("open"));
+});
+
+/* =============================================
+   ADD / EDIT TASK
+   ============================================= */
+function addTask() {
+  if (!activeDate) {
+    closeModalDirect();
+    openCalendar();
+    return;
+  }
+
+  const title = taskTitle.value.trim();
+  if (title === "") {
+    taskTitle.style.borderColor = "#e00";
+    taskTitle.focus();
+    setTimeout(() => { taskTitle.style.borderColor = ""; }, 1500);
+    return;
+  }
+  const desc = taskDesc.value.trim();
+
+  if (editContext) {
+    // ── Mode EDIT ──
+    const { textEl, descPanelEl, expandIndicatorEl, li, dateKey: editDateKey } = editContext;
+    textEl.textContent = title;
+
+    if (desc) {
+      if (descPanelEl) {
+        descPanelEl.textContent = desc;
+      } else {
+        const newPanel = document.createElement("div");
+        newPanel.className = "task-desc-panel";
+        newPanel.textContent = desc;
+        li.appendChild(newPanel);
+        expandIndicatorEl.textContent = "▶";
+        expandIndicatorEl.style.visibility = "visible";
+        expandIndicatorEl.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const expanded = li.classList.toggle("expanded");
+          expandIndicatorEl.textContent = expanded ? "▼" : "▶";
+          saveTasksFromDOM(li.dataset.dateKey);
+        });
+      }
+    } else if (descPanelEl) {
+      descPanelEl.remove();
+      expandIndicatorEl.textContent = "";
+      expandIndicatorEl.style.visibility = "hidden";
+      li.classList.remove("expanded");
+    }
+
+    closeModalDirect();
+    saveTasksFromDOM(editDateKey, () => renderAllTasks());
+  } else {
+    // ── Mode TAMBAH ──
+    closeModalDirect();
+    saveSingleTask(activeDate, { text: title, desc, completed: false, pinned: false, expanded: false }, () => {
+      renderAllTasks();
+    });
+  }
+}
+
+// Tambah satu task ke storage
+function saveSingleTask(dateKey, taskObj, callback) {
+  getTasksForDate(dateKey, (tasks) => {
+    tasks.push(taskObj);
+    saveTasksForDate(dateKey, tasks, callback);
+  });
+}
+
+/* =============================================
+   CREATE TASK ELEMENT
+   ============================================= */
+function createTaskElement(titleValue, descValue, isCompleted, isPinned = false, isExpanded = false, dateKey = null) {
+  const li = document.createElement("li");
+  li.className = "task-item";
+  li.dataset.dateKey = dateKey || activeDate || "";
+
+  if (isCompleted) li.classList.add("completed");
+  if (isPinned) li.classList.add("pinned");
+
+  const hasDesc = descValue && descValue.trim() !== "";
+
+  // ── Baris utama ──
+  const taskMain = document.createElement("div");
+  taskMain.className = "task-main";
+
+  // Checkbox
+  const check = document.createElement("div");
+  check.className = "check";
+  check.innerHTML = isCompleted ? "✔" : "";
+  check.addEventListener("click", (e) => {
+    e.stopPropagation();
+    li.classList.toggle("completed");
+    check.innerHTML = li.classList.contains("completed") ? "✔" : "";
+    saveTasksFromDOM(li.dataset.dateKey, () => renderAllTasks());
+  });
+
+  // Judul
+  const text = document.createElement("span");
+  text.className = "task-text";
+  text.textContent = titleValue;
+
+  const titleArea = document.createElement("div");
+  titleArea.className = "task-title-area";
+  titleArea.appendChild(text);
+
+  // Tombol expand
+  const expandBtn = document.createElement("button");
+  expandBtn.className = "expand-btn";
+  if (hasDesc) {
+    expandBtn.textContent = isExpanded ? "▼" : "▶";
+    expandBtn.title = "Toggle deskripsi";
+    expandBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const expanded = li.classList.toggle("expanded");
+      expandBtn.textContent = expanded ? "▼" : "▶";
+      saveTasksFromDOM(li.dataset.dateKey);
+    });
+  } else {
+    expandBtn.style.visibility = "hidden";
+  }
+
+  // ── Hamburger menu ──
+  const menuWrapper = document.createElement("div");
+  menuWrapper.className = "menu-wrapper";
+
+  const hamburgerBtn = document.createElement("button");
+  hamburgerBtn.className = "hamburger-btn";
+  hamburgerBtn.innerHTML = "&#xFE19;";
+  hamburgerBtn.setAttribute("aria-label", "Menu opsi task");
+
+  const dropdown = document.createElement("div");
+  dropdown.className = "task-dropdown";
+
+  hamburgerBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    document.querySelectorAll(".task-dropdown.open").forEach((d) => {
+      if (d !== dropdown) d.classList.remove("open");
+    });
+    dropdown.classList.toggle("open");
+  });
+
+  function makeMenuItem(icon, label, cls, handler) {
+    const item = document.createElement("button");
+    item.className = "dropdown-item " + cls;
+    item.innerHTML = `<span class="item-icon">${icon}</span><span>${label}</span>`;
+    item.addEventListener("click", (e) => {
+      e.stopPropagation();
+      dropdown.classList.remove("open");
+      handler();
+    });
+    return item;
+  }
+
+  const pinItem = makeMenuItem("📌", isPinned ? "Unpin" : "Pin", "item-pin", () => {
+    li.classList.toggle("pinned");
+    saveTasksFromDOM(li.dataset.dateKey, () => renderAllTasks());
+  });
+
+  const editItem = makeMenuItem("✏️", "Edit", "item-edit", () => {
+    openModal({
+      li,
+      textEl: text,
+      descPanelEl: li.querySelector(".task-desc-panel"),
+      expandIndicatorEl: expandBtn,
+      dateKey: li.dataset.dateKey,
+    });
+  });
+
+  const deleteItem = makeMenuItem("🗑️", "Hapus", "item-delete", () => {
+    const dk = li.dataset.dateKey;
+    li.remove();
+    saveTasksFromDOM(dk, () => renderAllTasks());
+  });
+
+  dropdown.appendChild(pinItem);
+  dropdown.appendChild(editItem);
+  dropdown.appendChild(deleteItem);
+  menuWrapper.appendChild(hamburgerBtn);
+  menuWrapper.appendChild(dropdown);
+
+  taskMain.appendChild(check);
+  taskMain.appendChild(titleArea);
+  taskMain.appendChild(expandBtn);
+  taskMain.appendChild(menuWrapper);
+
+  // ── Panel deskripsi ──
+  if (hasDesc) {
+    const descPanel = document.createElement("div");
+    descPanel.className = "task-desc-panel";
+    descPanel.textContent = descValue;
+    li.appendChild(taskMain);
+    li.appendChild(descPanel);
+    if (isExpanded) li.classList.add("expanded");
+  } else {
+    li.appendChild(taskMain);
+  }
+
+  taskList.appendChild(li);
+}
+
+/* =============================================
+   SAVE TASKS — snapshot DOM → chrome.storage.local
+   ============================================= */
+function saveTasksFromDOM(dateKey, callback) {
+  if (!dateKey) return;
+  const tasks = [];
+  document.querySelectorAll(`#taskList li.task-item[data-date-key="${dateKey}"]`).forEach((li) => {
+    const descEl = li.querySelector(".task-desc-panel");
+    tasks.push({
+      text: li.querySelector(".task-text").textContent,
+      desc: descEl ? descEl.textContent : "",
+      completed: li.classList.contains("completed"),
+      pinned: li.classList.contains("pinned"),
+      expanded: li.classList.contains("expanded"),
+    });
+  });
+  saveTasksForDate(dateKey, tasks, callback);
+}

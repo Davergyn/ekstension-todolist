@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To Do List</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <!-- Navbar -->
+  <div class="navbar">
+    <!-- Kiri: Icon Kalender -->
+    <span class="calendar-icon" title="Pilih tanggal">📆</span>
+
+    <!-- Kanan: Tanggal -->
+    <input type="date" id="datePicker" hidden />
+    <div class="navbar-date-container">
+      <span id="selectedDay" class="navbar-day"></span>
+      <span id="selectedDate" class="navbar-date"></span>
+    </div>
+  </div>
+  <!-- Task List -->
+  <div class="container">
+    <ul id="taskList"></ul>
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <span class="empty-state-icon">📋</span>
+      <span class="empty-state-text">Pilih tanggal untuk melihat task</span>
+    </div>
+  </div>
+
+  <!-- FAB Button -->
+  <button class="fab-btn" id="fabBtn">+</button>
+
+  <!-- Modal Overlay -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modalBox">
+      <h3 class="modal-title" id="modalTitle">Tambah Task Baru</h3>
+      <div class="modal-field">
+        <label for="taskTitle">Judul</label>
+        <input type="text" id="taskTitle" autocomplete="off" placeholder="Judul task..." />
+      </div>
+      <div class="modal-field">
+        <label for="taskDesc">Deskripsi</label>
+        <textarea id="taskDesc" rows="3" placeholder="Deskripsi task (opsional)..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-cancel-btn" id="cancelBtn">Batal</button>
+        <button class="modal-save-btn" id="saveBtn">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reminder Popup -->
+  <div class="reminder-popup" id="reminderPopup">
+    <span class="reminder-icon">🔔</span>
+    <span class="reminder-text">Kerjakan <strong>Tugas Woi</strong></span>
+    <button class="reminder-close" id="reminderClose" title="Tutup">✕</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

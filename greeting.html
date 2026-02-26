@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Selamat Datang</title>
+    <link rel="stylesheet" href="greeting.css" />
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Header / Logo Area -->
+        <div class="header">
+            <div class="logo-wrapper">
+                <img src="to-do-list.png" alt="Logo" class="logo" />
+            </div>
+            <h1 class="app-title">To Do List</h1>
+            <p class="app-subtitle">Tetap produktif hari ini ✨</p>
+        </div>
+
+        <!-- Greeting Card -->
+        <div class="card">
+            <div class="greeting-icon">👋</div>
+            <h2 class="greeting-text" id="greetingText">Halo!</h2>
+            <p class="greeting-desc" id="greetingDesc">
+                Hari ini adalah hari yang luar biasa untuk menyelesaikan semua tugasmu.
+            </p>
+
+            <!-- Date & Time -->
+            <div class="datetime-wrapper">
+                <div class="date-display" id="dateDisplay"></div>
+                <div class="time-display" id="timeDisplay"></div>
+            </div>
+        </div>
+
+        <!-- CTA Button -->
+        <button class="btn-open" id="btnOpen">
+            <span class="btn-icon">🚀</span>
+            <span class="btn-label">Buka Aplikasi</span>
+        </button>
+
+        <p class="close-hint">Popup ini otomatis muncul saat browser dibuka</p>
+    </div>
+
+    <script src="greeting.js"></script>
+</body>
+
+</html>
