@@ -46,7 +46,7 @@ function setGreeting() {
         desc = 'Malam yang sibuk! Jangan lupa istirahat setelah kerja keras.';
     } else {
         greeting = 'Halo! 🌟';
-        desc = 'Halo! Ayo Selesaikan tugasmu.';
+        desc = 'Ayo Selesaikan tugasmu.';
     }
 
     document.getElementById('greetingText').textContent = greeting;
