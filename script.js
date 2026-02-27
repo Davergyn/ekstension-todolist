@@ -18,6 +18,11 @@ let editContext = null;
 // Tanggal aktif untuk penambahan task baru (format: "YYYY-MM-DD")
 let activeDate = null;
 
+// Timer State
+let timerInterval = null;
+let endTime = null;
+let currentTimerMode = 'focus';
+
 /* =============================================
    STORAGE HELPERS (chrome.storage.local)
    ============================================= */
@@ -223,6 +228,152 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       addTask();
     }
+  });
+
+  /* =============================================
+     TIMER FEATURE SETUP
+     ============================================= */
+  const timerBellIcon = document.getElementById("timerBellIcon");
+  const timerModalOverlay = document.getElementById("timerModalOverlay");
+  const cancelTimerBtn = document.getElementById("cancelTimerBtn");
+  const closeTimerModalBtn = document.getElementById("closeTimerModalBtn");
+  const startTimerBtn = document.getElementById("startTimerBtn");
+  const stopTimerBtn = document.getElementById("stopTimerBtn");
+
+  const timerModeSelect = document.getElementById("timerMode");
+  const timerMinutesInput = document.getElementById("timerMinutes");
+
+  const timerSetupSection = document.getElementById("timerSetupSection");
+  const timerInputSection = document.getElementById("timerInputSection");
+  const timerActiveState = document.getElementById("timerActiveState");
+  const timerCountdownDisplay = document.getElementById("timerCountdownDisplay");
+
+  const timerActions = document.getElementById("timerActions");
+  const timerStopActions = document.getElementById("timerStopActions");
+
+  function openTimerModal() {
+    timerModalOverlay.classList.add("active");
+    checkActiveTimer();
+  }
+
+  function closeTimerModal() {
+    timerModalOverlay.classList.remove("active");
+  }
+
+  function checkActiveTimer() {
+    chrome.storage.local.get(["timerEndTime", "timerMode"], (result) => {
+      if (result.timerEndTime && result.timerEndTime > Date.now()) {
+        // Timer sedang berjalan
+        endTime = result.timerEndTime;
+        currentTimerMode = result.timerMode || 'focus';
+        showActiveTimerUI();
+        startCountdownDisplay();
+      } else {
+        // Tidak ada timer / sudah selesai
+        showSetupTimerUI();
+        if (timerInterval) clearInterval(timerInterval);
+      }
+    });
+  }
+
+  function showActiveTimerUI() {
+    timerSetupSection.style.display = "none";
+    timerInputSection.style.display = "none";
+    timerActions.style.display = "none";
+
+    timerActiveState.style.display = "block";
+    timerStopActions.style.display = "flex";
+  }
+
+  function showSetupTimerUI() {
+    timerSetupSection.style.display = "block";
+    timerInputSection.style.display = "block";
+    timerActions.style.display = "flex";
+
+    timerActiveState.style.display = "none";
+    timerStopActions.style.display = "none";
+
+    // Default values
+    timerModeSelect.value = "focus";
+    timerMinutesInput.value = "";
+  }
+
+  function updateCountdownText() {
+    if (!endTime) return;
+    const remaining = endTime - Date.now();
+
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      timerCountdownDisplay.textContent = "00:00";
+      setTimeout(() => {
+        closeTimerModal();
+        showSetupTimerUI();
+      }, 1000);
+      return;
+    }
+
+    const totalSeconds = Math.floor(remaining / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    timerCountdownDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
+
+  function startCountdownDisplay() {
+    if (timerInterval) clearInterval(timerInterval);
+    updateCountdownText();
+    timerInterval = setInterval(updateCountdownText, 1000);
+  }
+
+  // Event Listeners Timer
+  if (timerBellIcon) timerBellIcon.addEventListener("click", openTimerModal);
+  if (cancelTimerBtn) cancelTimerBtn.addEventListener("click", closeTimerModal);
+  if (closeTimerModalBtn) closeTimerModalBtn.addEventListener("click", closeTimerModal);
+
+  // Klik overlay -> tutup
+  timerModalOverlay.addEventListener("click", (e) => {
+    if (e.target === timerModalOverlay) closeTimerModal();
+  });
+
+  // Start Timer
+  startTimerBtn.addEventListener("click", () => {
+    // Minta Notif Permission pertama kali user klik tombol ini start
+    if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+      Notification.requestPermission();
+    }
+
+    const mins = parseInt(timerMinutesInput.value, 10);
+    if (!mins || mins <= 0) {
+      timerMinutesInput.style.borderColor = "#e00";
+      setTimeout(() => { timerMinutesInput.style.borderColor = ""; }, 1500);
+      return;
+    }
+
+    const mode = timerModeSelect.value;
+
+    // Kirim pesan ke background script untuk setup alarm
+    chrome.runtime.sendMessage({
+      action: "startTimer",
+      minutes: mins,
+      mode: mode
+    }, (response) => {
+      if (response && response.success) {
+        checkActiveTimer();
+      }
+    });
+  });
+
+  // Stop Timer
+  stopTimerBtn.addEventListener("click", () => {
+    chrome.runtime.sendMessage({ action: "stopTimer" }, (response) => {
+      if (response && response.success) {
+        if (timerInterval) clearInterval(timerInterval);
+        endTime = null;
+        chrome.storage.local.remove(["timerEndTime", "timerMode"], () => {
+          showSetupTimerUI();
+        });
+      }
+    });
   });
 });
 

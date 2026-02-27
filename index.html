@@ -20,6 +20,9 @@
       <span id="selectedDay" class="navbar-day"></span>
       <span id="selectedDate" class="navbar-date"></span>
     </div>
+
+    <!-- Kanan: Lonceng Timer -->
+    <span class="bell-icon" id="timerBellIcon" title="Timer Fokus/Istirahat">🔔</span>
   </div>
   <!-- Task List -->
   <div class="container">
@@ -58,6 +61,36 @@
     <span class="reminder-icon">🔔</span>
     <span class="reminder-text">Kerjakan <strong>Tugas Woi</strong></span>
     <button class="reminder-close" id="reminderClose" title="Tutup">✕</button>
+  </div>
+
+  <!-- Timer Modal Overlay -->
+  <div class="modal-overlay" id="timerModalOverlay">
+    <div class="modal" id="timerModalBox">
+      <h3 class="modal-title">Set Timer</h3>
+      <div class="modal-field" id="timerSetupSection">
+        <label for="timerMode">Mode</label>
+        <select id="timerMode" class="timer-select">
+          <option value="focus">Fokus</option>
+          <option value="break">Istirahat</option>
+        </select>
+      </div>
+      <div class="modal-field" id="timerInputSection">
+        <label for="timerMinutes">Waktu (Menit)</label>
+        <input type="number" id="timerMinutes" min="1" placeholder="Misal: 25" />
+      </div>
+      <div id="timerActiveState" style="display: none; text-align: center; margin: 16px 0;">
+        <p class="timer-countdown-text" style="font-size: 14px; color: var(--text-primary);">Sisa Waktu: <br><strong
+            id="timerCountdownDisplay" style="font-size: 24px; color: var(--accent);">--:--</strong></p>
+      </div>
+      <div class="modal-actions" id="timerActions">
+        <button class="modal-cancel-btn" id="cancelTimerBtn">Tutup</button>
+        <button class="modal-save-btn" id="startTimerBtn">Mulai</button>
+      </div>
+      <div class="modal-actions" id="timerStopActions" style="display: none;">
+        <button class="modal-cancel-btn" id="closeTimerModalBtn">Batal</button>
+        <button class="modal-save-btn" style="background: var(--danger);" id="stopTimerBtn">Berhenti</button>
+      </div>
+    </div>
   </div>
 
   <script src="script.js"></script>

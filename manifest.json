@@ -24,7 +24,9 @@
     "storage",
     "tabs",
     "windows",
-    "system.display"
+    "system.display",
+    "alarms",
+    "notifications"
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
@@ -37,7 +39,8 @@
         "to-do-list.png",
         "greeting.html",
         "greeting.css",
-        "greeting.js"
+        "greeting.js",
+        "timer_notif.html"
       ],
       "matches": [
         "<all_urls>"

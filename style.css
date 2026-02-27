@@ -73,6 +73,7 @@ body {
   flex-shrink: 0;
   z-index: 50;
   box-shadow: var(--shadow-sm);
+  position: relative;
 }
 
 /* Kiri: Icon kalender emoji */
@@ -118,11 +119,15 @@ body {
   text-transform: uppercase;
 }
 
-/* Kanan: Tanggal */
+/* Tengah: Tanggal */
 .navbar-date-container {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
 }
 
 .navbar-day {
@@ -767,4 +772,45 @@ button {
 .reminder-close:hover {
   color: var(--pin);
   background: var(--pin-dim);
+}
+
+/* =============================================
+   TIMER FEATURE
+   ============================================= */
+.bell-icon {
+  font-size: 18px;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition);
+}
+
+.bell-icon:hover {
+  background: var(--accent-dim);
+}
+
+.timer-select {
+  width: 100%;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  cursor: pointer;
+  appearance: none;
+}
+
+.timer-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
 }
