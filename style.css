@@ -794,23 +794,210 @@ button {
   background: var(--accent-dim);
 }
 
-.timer-select {
-  width: 100%;
-  padding: 10px 12px;
-  box-sizing: border-box;
-  background: var(--bg);
+.timer-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  padding: 30px 20px 24px;
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  font-family: inherit;
-  font-size: 13px;
-  outline: none;
-  transition: border-color var(--transition), box-shadow var(--transition);
-  cursor: pointer;
-  appearance: none;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: 90%;
+  max-width: 320px;
 }
 
-.timer-select:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-dim);
+.timer-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  line-height: 1;
+  transition: color var(--transition), background var(--transition);
+}
+
+.timer-close-btn:hover {
+  color: var(--danger);
+  background: var(--danger-dim);
+}
+
+/* Tabs */
+.timer-tabs {
+  display: flex;
+  background: var(--card);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  margin-bottom: 24px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  width: 100%;
+}
+
+.timer-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), box-shadow var(--transition);
+}
+
+.timer-tab:hover {
+  color: var(--text-primary);
+}
+
+.timer-tab.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Circular Progress */
+.timer-circle-wrap {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.timer-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.timer-bg,
+.timer-progress {
+  fill: none;
+  stroke-width: 6;
+}
+
+.timer-bg {
+  stroke: var(--card);
+}
+
+.timer-progress {
+  stroke: var(--accent);
+  stroke-linecap: round;
+  /** Radius = 45. Circumference = 2 * pi * 45 ≈ 282.74 **/
+  stroke-dasharray: 283;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1s linear;
+}
+
+/* The Input Field inside the Circle */
+.timer-input-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#timerMinInput,
+#timerSecInput {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 40px;
+  font-weight: 700;
+  text-align: center;
+  width: 50px;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  box-shadow: none;
+}
+
+.timer-separator {
+  color: var(--text-primary);
+  font-size: 38px;
+  font-weight: 700;
+  margin: 0 4px;
+  padding-bottom: 6px;
+  /* align vertically better */
+}
+
+#timerMinInput:focus,
+#timerSecInput:focus {
+  border: none;
+  box-shadow: none;
+  color: var(--accent-hover);
+}
+
+/* Controls */
+.timer-controls {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.btn-timer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition);
+}
+
+.btn-timer:hover {
+  background: var(--card-hover);
+  transform: translateY(-2px);
+}
+
+.btn-timer:active {
+  transform: translateY(0);
+}
+
+.btn-pause-resume {
+  flex: 1;
+  background: var(--accent-dim);
+  border-color: rgba(124, 111, 247, 0.3);
+  color: var(--accent-hover);
+}
+
+.btn-pause-resume:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-reset {
+  padding: 10px;
+  font-size: 18px;
+  width: 44px;
+  color: var(--text-secondary);
+}
+
+.btn-reset:hover {
+  color: var(--danger);
+  background: var(--danger-dim);
+  border-color: rgba(224, 92, 106, 0.3);
+}
+
+.btn-icon {
+  font-size: 16px;
+  line-height: 1;
 }

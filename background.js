@@ -108,7 +108,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
             }
 
             // Bersihkan data timer di storage
-            chrome.storage.local.remove(["timerEndTime", "timerMode"]);
+            chrome.storage.local.remove(["timerEndTime", "timerMode", "timerState", "timerDuration", "timerRemaining"]);
         });
     }
 });

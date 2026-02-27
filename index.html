@@ -65,31 +65,39 @@
 
   <!-- Timer Modal Overlay -->
   <div class="modal-overlay" id="timerModalOverlay">
-    <div class="modal" id="timerModalBox">
-      <h3 class="modal-title">Set Timer</h3>
-      <div class="modal-field" id="timerSetupSection">
-        <label for="timerMode">Mode</label>
-        <select id="timerMode" class="timer-select">
-          <option value="focus">Fokus</option>
-          <option value="break">Istirahat</option>
-        </select>
+    <div class="modal timer-modal" id="timerModalBox">
+      <!-- Tabs -->
+      <div class="timer-tabs">
+        <button class="timer-tab active" id="tabFocus">Focus</button>
+        <button class="timer-tab" id="tabBreak">Break</button>
       </div>
-      <div class="modal-field" id="timerInputSection">
-        <label for="timerMinutes">Waktu (Menit)</label>
-        <input type="number" id="timerMinutes" min="1" placeholder="Misal: 25" />
+
+      <!-- Circular Progress & Time Display -->
+      <div class="timer-circle-wrap">
+        <svg class="timer-svg" viewBox="0 0 100 100">
+          <circle class="timer-bg" cx="50" cy="50" r="45"></circle>
+          <circle class="timer-progress" id="timerProgressCircle" cx="50" cy="50" r="45"></circle>
+        </svg>
+        <div class="timer-input-wrap">
+          <input type="text" id="timerMinInput" value="25" maxlength="2" autocomplete="off" />
+          <span class="timer-separator">:</span>
+          <input type="text" id="timerSecInput" value="00" maxlength="2" autocomplete="off" />
+        </div>
       </div>
-      <div id="timerActiveState" style="display: none; text-align: center; margin: 16px 0;">
-        <p class="timer-countdown-text" style="font-size: 14px; color: var(--text-primary);">Sisa Waktu: <br><strong
-            id="timerCountdownDisplay" style="font-size: 24px; color: var(--accent);">--:--</strong></p>
+
+      <!-- Controls -->
+      <div class="timer-controls">
+        <button class="btn-timer btn-pause-resume" id="btnPauseResume">
+          <span class="btn-icon" id="iconPauseResume">⏸</span>
+          <span id="textPauseResume">Pause</span>
+        </button>
+        <button class="btn-timer btn-reset" id="btnReset">
+          <span class="btn-icon">↻</span>
+        </button>
       </div>
-      <div class="modal-actions" id="timerActions">
-        <button class="modal-cancel-btn" id="cancelTimerBtn">Tutup</button>
-        <button class="modal-save-btn" id="startTimerBtn">Mulai</button>
-      </div>
-      <div class="modal-actions" id="timerStopActions" style="display: none;">
-        <button class="modal-cancel-btn" id="closeTimerModalBtn">Batal</button>
-        <button class="modal-save-btn" style="background: var(--danger);" id="stopTimerBtn">Berhenti</button>
-      </div>
+
+      <!-- Close Button (Top Right) -->
+      <button class="timer-close-btn" id="cancelTimerBtn" title="Tutup">✕</button>
     </div>
   </div>
 
