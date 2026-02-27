@@ -24,24 +24,44 @@ let endTime = null;
 let currentTimerMode = 'focus';
 
 /* =============================================
-   STORAGE HELPERS (chrome.storage.local)
+   STORAGE (chrome.storage.local)
    ============================================= */
+/**
+ * Mengambil semua data tasks yang tersimpan dari chrome.storage.local.
+ * @param {function} callback - dieksekusi setelah data berhasil diambil, menerima objek allTasks.
+ */
 function getAllTasks(callback) {
   chrome.storage.local.get("tasksByDate", (result) => {
     callback(result.tasksByDate || {});
   });
 }
 
+/**
+ * Menyimpan seluruh struktur data tasks kembali ke chrome.storage.local.
+ * @param {object} allTasks - objek berisi pasangan tanggal sebagai key, dan array tasks sebagai value.
+ * @param {function} callback - dieksekusi setelah berhasil tersimpan.
+ */
 function saveAllTasks(allTasks, callback) {
   chrome.storage.local.set({ tasksByDate: allTasks }, callback);
 }
 
+/**
+ * Mengambil array task khusus untuk satu tanggal tertentu.
+ * @param {string} dateKey - string tanggal (format YYYY-MM-DD).
+ * @param {function} callback - dieksekusi dengan array task untuk tanggal tersebut.
+ */
 function getTasksForDate(dateKey, callback) {
   getAllTasks((all) => {
     callback(all[dateKey] || []);
   });
 }
 
+/**
+ * Menyimpan atau memperbarui array task untuk satu tanggal tertentu.
+ * @param {string} dateKey - string tanggal (format YYYY-MM-DD).
+ * @param {Array} tasks - array task baru yang akan disimpan.
+ * @param {function} callback - dieksekusi setelah berhasil disimpan.
+ */
 function saveTasksForDate(dateKey, tasks, callback) {
   getAllTasks((all) => {
     all[dateKey] = tasks;
@@ -49,9 +69,45 @@ function saveTasksForDate(dateKey, tasks, callback) {
   });
 }
 
+/**
+ * Menghapus task yang sudah lebih dari 2 hari berdasarkan waktu saat ini (today).
+ * @param {function} callback - dieksekusi setelah proses pengecekan dan penghapusan selesai.
+ */
+function deleteOldTasks(callback) {
+  getAllTasks((all) => {
+    let changed = false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    for (const dateKey in all) {
+      const target = new Date(dateKey);
+      target.setHours(0, 0, 0, 0);
+      const diffDays = Math.round((today - target) / 86400000);
+
+      // Jika lebih dari 2 hari di masa lalu
+      if (diffDays > 2) {
+        delete all[dateKey];
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      saveAllTasks(all, callback);
+    } else {
+      if (callback) callback();
+    }
+  });
+}
+
 /* =============================================
    DATE LABEL HELPERS
    ============================================= */
+/**
+ * Menghasilkan label teks relatif (contoh: "Hari ini", "Kemarin", "Besok")
+ * berdasarkan selisih hari antara waktu saat ini dengan dateKey.
+ * @param {string} dateKey - string tanggal (format YYYY-MM-DD).
+ * @returns {string} Label tanggal yang formatnya sudah disesuaikan.
+ */
 function getDateLabel(dateKey) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -84,6 +140,9 @@ if (calendarIcon) {
   });
 }
 
+/**
+ * Membuka input tampilan kalender bawaan browser.
+ */
 function openCalendar() {
   if (typeof datePicker.showPicker === "function") {
     datePicker.showPicker();
@@ -97,6 +156,11 @@ datePicker.addEventListener("change", () => {
   setActiveDate(datePicker.value);
 });
 
+/**
+ * Mengatur tanggal aktif aplikasi berdasarkan input yang dipilih dari kalender,
+ * memperbarui tampilan UI untuk tanggal tersebut, dan menyimpannya ke local storage.
+ * @param {string} dateValue - tangal yang dipilih (format YYYY-MM-DD).
+ */
 function setActiveDate(dateValue) {
   activeDate = dateValue;
 
@@ -118,6 +182,10 @@ function setActiveDate(dateValue) {
 /* =============================================
    RENDER — SEMUA TASK, DIURUTKAN TERLAMA DULU
    ============================================= */
+/**
+ * Mengambil, memilah, dan merender (menampilkan kembali) semua task dari local storage
+ * ke layar ekstensi berdasarkan urutan tertentu (pinned, status komplet).
+ */
 function renderAllTasks() {
   getAllTasks((all) => {
     taskList.innerHTML = "";
@@ -160,6 +228,10 @@ function renderAllTasks() {
   });
 }
 
+/**
+ * Memperbarui tampilan "kosong" (empty state) apabila tidak ada satupun task.
+ * @param {boolean} show - true untuk menampilkan info "Belum ada task tersimpan", false untuk menyembunyikannya.
+ */
 function updateEmptyState(show) {
   if (!emptyState) return;
   emptyState.style.display = show ? "flex" : "none";
@@ -189,7 +261,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const savedValue = result.selectedDateValue;
     activeDate = savedValue || todayStr;
     if (!savedValue) chrome.storage.local.set({ selectedDateValue: todayStr });
-    renderAllTasks();
+
+    // Hapus task lama lalu render task yang tersisa
+    deleteOldTasks(() => {
+      renderAllTasks();
+    });
   });
 
   // ── Reminder Popup ──
@@ -251,15 +327,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const timerActions = document.getElementById("timerActions");
   const timerStopActions = document.getElementById("timerStopActions");
 
+  /**
+   * Menampilkan dialog overlay modal untuk Timer (Fokus/Istirahat).
+   */
   function openTimerModal() {
     timerModalOverlay.classList.add("active");
     checkActiveTimer();
   }
 
+  /**
+   * Menyembunyikan dialog overlay modal untuk Timer.
+   */
   function closeTimerModal() {
     timerModalOverlay.classList.remove("active");
   }
 
+  /**
+   * Mengecek apakah ada timer yang sedang aktif / berjalan di background.
+   * Jika ada, maka akan lanjut menampilkan UI Countdown (Hitung Mundur).
+   */
   function checkActiveTimer() {
     chrome.storage.local.get(["timerEndTime", "timerMode"], (result) => {
       if (result.timerEndTime && result.timerEndTime > Date.now()) {
@@ -276,6 +362,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  /**
+   * Mengatur antarmuka untuk timer yang sedang aktif (Hitung Mundur).
+   */
   function showActiveTimerUI() {
     timerSetupSection.style.display = "none";
     timerInputSection.style.display = "none";
@@ -285,6 +374,9 @@ document.addEventListener("DOMContentLoaded", () => {
     timerStopActions.style.display = "flex";
   }
 
+  /**
+   * Menampilkan layar pengaturan form untuk membuat timer baru yang belum aktif.
+   */
   function showSetupTimerUI() {
     timerSetupSection.style.display = "block";
     timerInputSection.style.display = "block";
@@ -298,6 +390,10 @@ document.addEventListener("DOMContentLoaded", () => {
     timerMinutesInput.value = "";
   }
 
+  /**
+   * Melakukan pembaruan terhadap string hitung mundur (kalkulasi sisa waktu)
+   * serta mengeksekusi penghentian UI bila waktunya sudah tercapai (<= 0).
+   */
   function updateCountdownText() {
     if (!endTime) return;
     const remaining = endTime - Date.now();
@@ -319,6 +415,9 @@ document.addEventListener("DOMContentLoaded", () => {
     timerCountdownDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }
 
+  /**
+   * Memulai fungsi setInterval() setiap 1 detik untuk `updateCountdownText()`.
+   */
   function startCountdownDisplay() {
     if (timerInterval) clearInterval(timerInterval);
     updateCountdownText();
@@ -380,6 +479,10 @@ document.addEventListener("DOMContentLoaded", () => {
 /* =============================================
    MODAL OPEN / CLOSE
    ============================================= */
+/**
+ * Membuka modal form Task (bisa digunakan untuk Tambah Task Baru atau Edit Task).
+ * @param {object} ctx - Jika form digunakan untuk edit (mengandung context edit dari element DOM task). Jika null, anggap form "Tambah Baru".
+ */
 function openModal(ctx = null) {
   editContext = ctx;
 
@@ -398,10 +501,16 @@ function openModal(ctx = null) {
   taskTitle.select();
 }
 
+/**
+ * Dipanggil secara responsif bila pengguna menekan tombol klik pada background modal overlay untuk menutup modal.
+ */
 function closeModal(event) {
   if (event.target === modalOverlay) closeModalDirect();
 }
 
+/**
+ * Menutup form secara paksa, membersihkan field input, dan me-reset status `editContext`.
+ */
 function closeModalDirect() {
   modalOverlay.classList.remove("active");
   editContext = null;
@@ -419,6 +528,11 @@ document.addEventListener("click", () => {
 /* =============================================
    ADD / EDIT TASK
    ============================================= */
+/**
+ * Logic utama untuk "Simpan" hasil Tambah / Edit Task.
+ * Membaca nilai dari field Judul & Deskripsi, memanipulasi DOM untuk task list,
+ * lalu trigger sinkronisasi dari DOM ke Storage.
+ */
 function addTask() {
   if (!activeDate) {
     closeModalDirect();
@@ -475,7 +589,12 @@ function addTask() {
   }
 }
 
-// Tambah satu task ke storage
+/**
+ * Secara ekslusif memasukan obyek satu task (baru) ke dalam array tugas di tanggal yang cocok.
+ * @param {string} dateKey - string tanggal penyimpanannya (YYYY-MM-DD).
+ * @param {object} taskObj - data asli satu task (text, desc, completed, dst).
+ * @param {function} callback - callback untuk render display sesudahnya.
+ */
 function saveSingleTask(dateKey, taskObj, callback) {
   getTasksForDate(dateKey, (tasks) => {
     tasks.push(taskObj);
@@ -486,6 +605,11 @@ function saveSingleTask(dateKey, taskObj, callback) {
 /* =============================================
    CREATE TASK ELEMENT
    ============================================= */
+/**
+ * Berfungsi untuk "Membangun/Create" node HTML `<li>` lengkap untuk satu task
+ * beserta semua child logic-event listeners (ceklis, expand-deskripsi, menu-tiga-titik).
+ * Hasil node `<li>` difabrikasi langsung masuk (appends) ke dalam root `taskList`.
+ */
 function createTaskElement(titleValue, descValue, isCompleted, isPinned = false, isExpanded = false, dateKey = null) {
   const li = document.createElement("li");
   li.className = "task-item";
@@ -556,6 +680,9 @@ function createTaskElement(titleValue, descValue, isCompleted, isPinned = false,
     dropdown.classList.toggle("open");
   });
 
+  /**
+   * Helper ringkas di dalam `createTaskElement` untuk membuat tiap item dropdown list (misal Tombol Hapus).
+   */
   function makeMenuItem(icon, label, cls, handler) {
     const item = document.createElement("button");
     item.className = "dropdown-item " + cls;
@@ -618,6 +745,13 @@ function createTaskElement(titleValue, descValue, isCompleted, isPinned = false,
 /* =============================================
    SAVE TASKS — snapshot DOM → chrome.storage.local
    ============================================= */
+/**
+ * Fungsi ini melakukan "Scraping" atau pengambilan status terkini dari tampilan DOM (`<li>`)
+ * seperti: apakah UI memperlihatkan list `completed` atau `pinned`,
+ * dan mereplika ulang struktur DOM ke struktur Array, lalu menyimpannya ke `chrome.storage.local`.
+ * @param {string} dateKey - Group ID Task per Tanggal.
+ * @param {function} callback - dieksekusi setelah snapshot tersimpan.
+ */
 function saveTasksFromDOM(dateKey, callback) {
   if (!dateKey) return;
   const tasks = [];
