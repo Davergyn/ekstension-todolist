@@ -35,7 +35,13 @@
     {
       "resources": [
         "style.css",
-        "script.js",
+        "js/storage.js",
+        "js/dateHelpers.js",
+        "js/calendar.js",
+        "js/taskRenderer.js",
+        "js/modal.js",
+        "js/timer.js",
+        "js/app.js",
         "to-do-list.png",
         "greeting.html",
         "greeting.css",
