@@ -672,6 +672,45 @@ button {
   background: var(--accent-hover);
 }
 
+/* Field tanggal di modal edit */
+.modal-date-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.modal-date-input-wrap:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.modal-calendar-icon {
+  font-size: 15px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.modal-date-input-wrap input[type="date"] {
+  border: none;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  flex: 1;
+  color: var(--text-primary);
+  font-size: 13px;
+  color-scheme: dark;
+}
+
+.modal-date-input-wrap input[type="date"]:focus {
+  border: none;
+  box-shadow: none;
+}
+
 /* =============================================
    REMINDER POPUP
    ============================================= */

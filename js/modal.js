@@ -6,6 +6,8 @@ const modalOverlay = document.getElementById("modalOverlay");
 const modalTitle = document.getElementById("modalTitle");
 const taskTitle = document.getElementById("taskTitle");
 const taskDesc = document.getElementById("taskDesc");
+const taskDatePicker = document.getElementById("taskDatePicker");
+const modalDateField = document.getElementById("modalDateField");
 
 // null = mode tambah; object = mode edit
 let editContext = null;
@@ -21,10 +23,15 @@ function openModal(ctx = null) {
         modalTitle.textContent = "Edit Task";
         taskTitle.value = ctx.textEl.textContent;
         taskDesc.value = ctx.descPanelEl ? ctx.descPanelEl.textContent : "";
+        // Tampilkan field tanggal dan isi dengan tanggal task saat ini
+        taskDatePicker.value = ctx.dateKey || "";
+        modalDateField.style.display = "";
     } else {
         modalTitle.textContent = "Tambah Task Baru";
         taskTitle.value = "";
         taskDesc.value = "";
+        // Sembunyikan field tanggal untuk mode tambah
+        modalDateField.style.display = "none";
     }
 
     modalOverlay.classList.add("active");
@@ -47,6 +54,8 @@ function closeModalDirect() {
     editContext = null;
     taskTitle.value = "";
     taskDesc.value = "";
+    taskDatePicker.value = "";
+    modalDateField.style.display = "none";
 }
 
 /* =============================================
@@ -76,6 +85,7 @@ function addTask() {
     if (editContext) {
         // ── Mode EDIT ──
         const { textEl, descPanelEl, expandIndicatorEl, li, dateKey: editDateKey } = editContext;
+        const newDateKey = taskDatePicker.value || editDateKey;
         textEl.textContent = title;
 
         if (desc) {
@@ -102,8 +112,25 @@ function addTask() {
             li.classList.remove("expanded");
         }
 
-        closeModalDirect();
-        saveTasksFromDOM(editDateKey, () => renderAllTasks());
+        if (newDateKey !== editDateKey) {
+            // Tanggal diubah: pindahkan task ke dateKey baru
+            const taskObj = {
+                text: title,
+                desc: desc,
+                completed: li.classList.contains("completed"),
+                pinned: li.classList.contains("pinned"),
+                expanded: li.classList.contains("expanded"),
+            };
+            li.remove();
+            closeModalDirect();
+            // Hapus dari tanggal lama, simpan ke tanggal baru
+            saveTasksFromDOM(editDateKey, () => {
+                saveSingleTask(newDateKey, taskObj, () => renderAllTasks());
+            });
+        } else {
+            closeModalDirect();
+            saveTasksFromDOM(editDateKey, () => renderAllTasks());
+        }
     } else {
         // ── Mode TAMBAH ──
         closeModalDirect();
