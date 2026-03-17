@@ -22,10 +22,10 @@ document.addEventListener("DOMContentLoaded", () => {
     datePicker.min = todayStr;
     datePicker.value = todayStr;
 
-    chrome.storage.local.get("selectedDateValue", (result) => {
-        const savedValue = result.selectedDateValue;
-        activeDate = savedValue || todayStr;
-        if (!savedValue) chrome.storage.local.set({ selectedDateValue: todayStr });
+    // Selalu simpan tanggal hari ini setiap kali aplikasi dibuka,
+    // agar activeDate tidak terjebak di tanggal yang sudah lewat.
+    initTodayDate((todayDate) => {
+        activeDate = todayDate;
 
         // Hapus task lama lalu render task yang tersisa
         deleteOldTasks(() => {

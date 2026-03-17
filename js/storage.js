@@ -46,6 +46,20 @@ function saveTasksForDate(dateKey, tasks, callback) {
 }
 
 /**
+ * Menyimpan tanggal hari ini ke chrome.storage.local setiap kali aplikasi dibuka.
+ * Fungsi ini memastikan bahwa activeDate selalu diperbarui ke hari ini,
+ * sehingga input task baru tidak masuk ke tanggal yang sudah lewat.
+ * @param {function} callback - dieksekusi setelah tanggal berhasil disimpan,
+ *                              menerima string tanggal hari ini (format YYYY-MM-DD).
+ */
+function initTodayDate(callback) {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    chrome.storage.local.set({ selectedDateValue: todayStr }, () => {
+        if (callback) callback(todayStr);
+    });
+}
+
+/**
  * Menghapus task yang sudah lebih dari 2 hari berdasarkan waktu saat ini (today).
  * @param {function} callback - dieksekusi setelah proses pengecekan dan penghapusan selesai.
  */
