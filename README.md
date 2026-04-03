@@ -1,10 +1,7 @@
 📝 To Do List & Podomoro Extension 
-Aplikasi To Do List berbasis ekstensi Google Chrome yang dirancang untuk membantu produktivitas harian. Ekstensi ini memiliki fitur unik berupa Startup Greeting Popup yang akan muncul secara otomatis memberikan salam dan pengingat waktu setiap kali browser Chrome pertama kali dijalankan.
+Aplikasi To Do List berbasis ekstensi Google Chrome yang dirancang untuk membantu produktivitas harian. Ekstensi ini memiliki fitur unik berupa Startup Popup yang akan muncul secara otomatis memberikan salam dan pengingat waktu setiap kali browser Chrome pertama kali dijalankan.
 
 ✨ Fitur Utama
--Startup Greeting
-Jendela popup otomatis saat browser dibuka dengan salam yang dinamis berdasarkan waktu (Pagi / Siang / Sore / Malam).
-
 -Manajemen Tugas
 Menambah, mengedit, menghapus, menandai tugas sebagai selesai dan tugas yang tidak dikerjakan dalam 2 hari akan di hapus otomatis.
 
@@ -45,7 +42,7 @@ Action & Windows API untuk mengontrol tampilan popup dan jendela aplikasi.
 
 📸 Cara Penggunaan
 1.Saat Membuka Chrome
-Jendela greeting akan muncul otomatis. Klik tombol "Buka Aplikasi" untuk langsung menuju daftar tugas.
+Popup akan muncul otomatis. Klik tombol "Buka Aplikasi" untuk langsung menuju daftar tugas.
 2.Menambah Tugas
 Klik tombol floating action (+) di pojok kanan bawah, lalu masukkan judul dan deskripsi tugas.
 3.Mengelola Tugas

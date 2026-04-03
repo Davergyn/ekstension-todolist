@@ -3,11 +3,11 @@
    ============================================= */
 
 // Tutup semua dropdown saat klik di luar
-document.addEventListener("click", () => {
-    document
-        .querySelectorAll(".task-dropdown.open")
-        .forEach((d) => d.classList.remove("open"));
-});
+// document.addEventListener("click", () => {
+//     document
+//         .querySelectorAll(".task-dropdown.open")
+//         .forEach((d) => d.classList.remove("open"));
+// });
 
 document.addEventListener("DOMContentLoaded", () => {
     const todayStr = new Date().toISOString().slice(0, 10);
