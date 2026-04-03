@@ -1,38 +1,6 @@
 // background.js - Service Worker (Manifest V3)
 
 /* =============================================
-   AUTO OPEN MAIN PAGE ON STARTUP
-   ============================================= */
-
-/**
- * Saat Chrome dibuka, otomatis tampilkan halaman utama ekstensi (index.html)
- * sebagai popup window di pojok kanan atas layar.
- */
-chrome.runtime.onStartup.addListener(() => {
-    chrome.system.display.getInfo((displays) => {
-        // Gunakan display utama
-        const primaryDisplay = displays.find(d => d.isPrimary) || displays[0];
-
-        const popupWidth  = 480;
-        const popupHeight = 600;
-
-        // Posisikan di pojok kanan atas, menghindari taskbar Windows
-        const leftPosition = primaryDisplay.workArea.left + primaryDisplay.workArea.width - popupWidth - 16;
-        const topPosition  = primaryDisplay.workArea.top + 16;
-
-        chrome.windows.create({
-            url:     chrome.runtime.getURL("index.html"),
-            type:    "popup",
-            width:   popupWidth,
-            height:  popupHeight,
-            left:    leftPosition,
-            top:     topPosition,
-            focused: true
-        });
-    });
-});
-
-/* =============================================
    TIMER & ALARM LOGIC
    ============================================= */
 
