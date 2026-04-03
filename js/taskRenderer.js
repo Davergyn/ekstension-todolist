@@ -9,6 +9,7 @@ const emptyState = document.getElementById("emptyState");
  * Mengambil, memilah, dan merender (menampilkan kembali) semua task dari local storage
  * ke layar ekstensi berdasarkan urutan tertentu (pinned, status komplet).
  */
+
 function renderAllTasks() {
     getAllTasks((all) => {
         taskList.innerHTML = "";
